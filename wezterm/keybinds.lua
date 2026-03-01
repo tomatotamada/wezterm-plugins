@@ -13,6 +13,21 @@ local spawn_window_with_cwd = wezterm.action_callback(function(window, pane)
 	end
 end)
 
+-- 現在のペインのcwdを引き継いで新しいタブを開く
+local spawn_tab_with_cwd = wezterm.action_callback(function(window, pane)
+	local cwd = pane:get_current_working_dir()
+	if cwd then
+		local cwd_str = cwd.file_path or tostring(cwd)
+		-- file://hostname/path 形式のURLからパス部分を取り出す
+		local path = cwd_str:match("^file://[^/]*(/.+)") or cwd_str
+		window:perform_action(act.SpawnCommandInNewTab {
+			args = { "wsl.exe", "--distribution", "ubuntu", "--cd", path },
+		}, pane)
+	else
+		window:perform_action(act.SpawnTab("CurrentPaneDomain"), pane)
+	end
+end)
+
 return {
 	keys = {
 		{ key = "Tab", mods = "CTRL", action = act.ActivateTabRelative(1) },
@@ -87,8 +102,8 @@ return {
 		{ key = "P", mods = "SHIFT|CTRL", action = act.ActivateCommandPalette },
 		{ key = "R", mods = "CTRL", action = act.ReloadConfiguration },
 		{ key = "R", mods = "SHIFT|CTRL", action = act.ReloadConfiguration },
-		{ key = "T", mods = "CTRL", action = act.SpawnTab("CurrentPaneDomain") },
-		{ key = "T", mods = "SHIFT|CTRL", action = act.SpawnTab("CurrentPaneDomain") },
+		{ key = "T", mods = "CTRL", action = spawn_tab_with_cwd },
+		{ key = "T", mods = "SHIFT|CTRL", action = spawn_tab_with_cwd },
 		{
 			key = "U",
 			mods = "CTRL",
@@ -127,8 +142,8 @@ return {
 		{ key = "p", mods = "SHIFT|CTRL", action = act.ActivateCommandPalette },
 		{ key = "r", mods = "SHIFT|CTRL", action = act.ReloadConfiguration },
 		{ key = "r", mods = "SUPER", action = act.ReloadConfiguration },
-		{ key = "t", mods = "SHIFT|CTRL", action = act.SpawnTab("CurrentPaneDomain") },
-		{ key = "t", mods = "SUPER", action = act.SpawnTab("CurrentPaneDomain") },
+		{ key = "t", mods = "SHIFT|CTRL", action = spawn_tab_with_cwd },
+		{ key = "t", mods = "SUPER", action = spawn_tab_with_cwd },
 		{
 			key = "u",
 			mods = "SHIFT|CTRL",
